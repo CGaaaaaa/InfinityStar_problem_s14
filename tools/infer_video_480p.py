@@ -156,7 +156,7 @@ def perform_inference(pipe, data, args):
 
 if __name__ == '__main__':
     generation_duration = 5 # or 10 
-    checkpoints_dir = './'
+    checkpoints_dir = '/data/yekeming/pretrained/InfinityStar'
     # For optimal performance, enabling the prompt rewriter is recommended.
     # To utilize the GPT model, ensure the following environment variables are set:
     # export OPEN_API_KEY="YOUR_API_KEY"
@@ -191,6 +191,8 @@ if __name__ == '__main__':
     args.semantic_scales=11
     args.max_repeat_times=10000
     args.enable_rewriter=enable_rewriter
+    args.save_intermediate_frames=1
+    args.save_intermediate_frames_dir='/data/yekeming/caijiani/projects/InfinityStar/output/intermediate_frames'
 
     # load models
     pipe = InferencePipe(args)
@@ -216,7 +218,7 @@ if __name__ == '__main__':
     data['prompt'] = prompt
                 
     output_dict = perform_inference(pipe, data, args)
-    save_dir = 'output'
+    save_dir = '/data/yekeming/caijiani/projects/InfinityStar/output'
     gen_video_path = osp.join(os.path.join(save_dir, 'gen_videos'), f'demo.mp4')
     save_video(output_dict['output'], fps=args.fps, save_filepath=gen_video_path)
             

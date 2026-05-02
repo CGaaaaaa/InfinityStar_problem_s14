@@ -153,6 +153,8 @@ class Args(Tap):
     context_interval: int = 2  # Context interval
     context_from_largest_no: int = 1  # Context from the largest number
     append_duration2caption: int = 0  # Whether to append duration to the caption
+    save_intermediate_frames: int = 0  # Whether to save intermediate frames during inference
+    save_intermediate_frames_dir: str = '/tmp/intermediate_frames'  # Directory to save intermediate frames
     cache_check_mode: int = 0  # Cache check mode
     online_t5: bool = True  # Whether to use online T5 or load local features
     

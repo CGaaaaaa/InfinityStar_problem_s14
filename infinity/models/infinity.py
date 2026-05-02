@@ -670,6 +670,38 @@ class Infinity(nn.Module):
                     last_stage = F.interpolate(summed_codes[-1], size=vae_scale_schedule[si], mode=vae.quantizer.z_interplote_down)
                     last_stage = self.embeds_codes2input(last_stage, bs//B)
             cum_scales += repeat_times
+            
+            # Save intermediate frames for each si at 1s, 3s, 5s
+            if hasattr(args, 'save_intermediate_frames') and args.save_intermediate_frames:
+                import os
+                import cv2
+                save_dir = getattr(args, 'save_intermediate_frames_dir', '/tmp/intermediate_frames')
+                os.makedirs(save_dir, exist_ok=True)
+                
+                frame_inds = [16, 32, 48, 80]  # 1s, 2s, 3s, 5s (fps=16)
+                frame_ss = context_info[si]['frame_ss']
+                frame_ee = context_info[si]['frame_ee']
+                
+                # Get current accumulated codes: summed_codes[-1] shape (B, d, T, H, W)
+                current_summed = summed_codes[-1]  # (B, d, frame_ee, H, W)
+                
+                # Decode to images
+                decoded = vae.decode(current_summed, slice=True)
+                decoded = (decoded + 1) / 2
+                decoded = torch.clamp(decoded, 0, 1)
+                decoded = decoded.permute(0, 2, 3, 4, 1)  # (B, T, H, W, C)
+                decoded = decoded.mul_(255).to(torch.uint8).cpu().numpy()
+                
+                # Save frames at 1s, 3s, 5s
+                for frame_idx in frame_inds:
+                    if frame_idx < decoded.shape[1]:
+                        img = decoded[0, frame_idx]  # (H, W, C) RGB format
+                        img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR for cv2
+                        filename = f"si_{si:02d}_frame_{frame_idx:03d}.png"
+                        filepath = os.path.join(save_dir, filename)
+                        cv2.imwrite(filepath, img_bgr)
+                        print(f"Saved: {filepath}")
+            
             if si < len(scale_schedule)-1:
                 if scale_schedule[si][-2:] == scale_schedule[-1][-2:]:
                     if self.other_args.noise_input:
@@ -861,6 +893,7 @@ class Infinity(nn.Module):
                     last_stage = self.embeds_codes2input(last_stage, bs//B)
                 pbar.update(1)
             cum_scales += repeat_times
+            
             if si < len(scale_schedule)-1:
                 if scale_schedule[si][-2:] == scale_schedule[-1][-2:]:
                     if self.other_args.noise_input:

@@ -61,3 +61,4 @@ tools/infer_interact_480p.py.bk
 VBench/
 vbench_output/
 vbench_evaluation_results/
+*.mp4
